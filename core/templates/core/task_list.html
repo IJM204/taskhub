@@ -1,0 +1,38 @@
+{% extends "core/base.html" %}
+
+{% block title %}Liste des tâches | TaskHub{% endblock %}
+
+{% block content %}
+
+<h2>Liste des tâches</h2>
+
+{% for task in tasks %}
+    <div>
+        <h3>{{ task.title|truncatechars:40 }}</h3>
+
+        <p>
+            Projet : {{ task.project.description|default:"Aucun projet" }}
+        </p>
+
+        <p>
+            Organisation : {{ task.project.organization.name }}
+        </p>
+
+        <p>
+            Date limite : {{ task.due_date|date:"d/m/Y" }}
+        </p>
+
+        <p>
+            Statut : {{ task.get_status_display }}
+        </p>
+
+        <p>
+            Priorité : {{ task.priority }}
+        </p>
+    </div>
+    <hr>
+{% empty %}
+    <p>Aucune tâche enregistrée.</p>
+{% endfor %}
+
+{% endblock %}

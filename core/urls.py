@@ -14,4 +14,7 @@ urlpatterns = [
     views.organization_detail,
     name="organization_detail"
     ),
+    path("tasks/", views.task_list, name="task_list"),
+
+
 ]

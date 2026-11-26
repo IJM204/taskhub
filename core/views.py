@@ -2,7 +2,7 @@ from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.shortcuts import render
 from .models import Organization
-
+from .models import Task
 
 def organization_list(request):
     organizations = Organization.objects.all()
@@ -24,4 +24,15 @@ def organization_detail(request, slug):
         request,
         "core/organization_detail.html",
         {"organization": organization}
+    )
+def task_list(request):
+    tasks = Task.objects.select_related(
+        "project",
+        "project__organization"
+    ).all()
+
+    return render(
+        request,
+        "core/task_list.html",
+        {"tasks": tasks}
     )
