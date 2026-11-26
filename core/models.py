@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-
+from django.utils.text import slugify
 class Organization(models.Model):
     name = models.CharField(
         max_length=150,
@@ -8,13 +8,18 @@ class Organization(models.Model):
     )
 
     slug = models.SlugField(
-        verbose_name="Identifiant URL"
+    unique=True,
+    verbose_name="Identifiant URL"
     )
 
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name="Date de création"
     )
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
