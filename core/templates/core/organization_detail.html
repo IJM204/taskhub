@@ -14,8 +14,9 @@
     <strong>Date de création :</strong>
     {{ organization.created_at }}
 </p>
-
-<a href="/organizations/">Retour aux organisations</a>
+<a href="{% url 'core:organization_list' %}">
+    Retour aux organisations
+</a>
 
 <hr>
 

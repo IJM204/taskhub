@@ -10,9 +10,11 @@
 
     {% for organization in organizations %}
         <div>
-            <h3>{{ organization.name }}</h3>
-            <p>Slug : {{ organization.slug }}</p>
-            <p>Créée le : {{ organization.created_at }}</p>
+            <h3>
+    <a href="{% url 'core:organization_detail' organization.slug %}">
+        {{ organization.name }}
+    </a>
+</h3>
         </div>
         <hr>
     {% endfor %}
