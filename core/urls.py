@@ -15,6 +15,6 @@ urlpatterns = [
     name="organization_detail"
     ),
     path("tasks/", views.task_list, name="task_list"),
-
+    path("contact/", views.contact, name="contact"),
 
 ]

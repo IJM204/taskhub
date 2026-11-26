@@ -1,3 +1,4 @@
+from .forms import ContactForm
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
 from django.shortcuts import render
@@ -36,3 +37,14 @@ def task_list(request):
         "core/task_list.html",
         {"tasks": tasks}
     )
+
+def contact(request):
+    if request.method == "POST":
+        form = ContactForm(request.POST)
+
+        if form.is_valid():
+            return render(request, "core/contact_success.html")
+    else:
+        form = ContactForm()
+
+    return render(request, "core/contact.html", {"form": form})
