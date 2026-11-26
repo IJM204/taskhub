@@ -17,4 +17,26 @@
 
 <a href="/organizations/">Retour aux organisations</a>
 
+<hr>
+
+<h3>Projets de cette organisation</h3>
+
+{% for project in organization.projects.all %}
+
+    <div>
+        <h4>{{ project.description }}</h4>
+
+        {% if project.is_archived %}
+            <p>Projet archivé</p>
+        {% else %}
+            <p>Projet actif</p>
+        {% endif %}
+    </div>
+
+{% empty %}
+
+    <p>Aucun projet associé à cette organisation.</p>
+
+{% endfor %}
+
 {% endblock %}
