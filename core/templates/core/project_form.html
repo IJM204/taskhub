@@ -1,13 +1,25 @@
 {% extends "core/base.html" %}
 
 {% block content %}
-<h1>Créer un projet</h1>
+<h1>
+    {% if project %}
+        Modifier le projet
+    {% else %}
+        Créer un projet
+    {% endif %}
+</h1>
 
 <form method="POST">
     {% csrf_token %}
 
     {{ form.as_p }}
 
-    <button type="submit">Créer le projet</button>
+    <button type="submit">
+        {% if project %}
+            Enregistrer les modifications
+        {% else %}
+            Créer le projet
+        {% endif %}
+    </button>
 </form>
 {% endblock %}

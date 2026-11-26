@@ -22,4 +22,9 @@ urlpatterns = [
     name="project_create"
     ),
 
+    path(
+    "projects/<int:pk>/edit/",
+    views.project_update,
+    name="project_update"
+    ),
 ]
