@@ -1,5 +1,15 @@
 from django import forms
+from .models import Project
 
+
+class ProjectForm(forms.ModelForm):
+    class Meta:
+        model = Project
+        fields = [
+            "organization",
+            "description",
+            "is_archived"
+        ]
 
 class ContactForm(forms.Form):
     name = forms.CharField(

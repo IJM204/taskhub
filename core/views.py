@@ -1,3 +1,5 @@
+from django.shortcuts import redirect
+from .forms import ProjectForm
 from .forms import ContactForm
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404
@@ -48,3 +50,22 @@ def contact(request):
         form = ContactForm()
 
     return render(request, "core/contact.html", {"form": form})
+def project_create(request):
+    if request.method == "POST":
+        form = ProjectForm(request.POST)
+
+        if form.is_valid():
+            project = form.save()
+
+            return redirect(
+                "core:organization_detail",
+                slug=project.organization.slug
+            )
+    else:
+        form = ProjectForm()
+
+    return render(
+        request,
+        "core/project_form.html",
+        {"form": form}
+    )
