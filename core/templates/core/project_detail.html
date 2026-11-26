@@ -1,0 +1,17 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+<h1>Détails du projet</h1>
+
+<p>Description : {{ project.description }}</p>
+<p>Organisation : {{ project.organization.name }}</p>
+<p>Archivé : {{ project.is_archived|yesno:"Oui,Non" }}</p>
+
+<a href="{% url 'core:project_update' project.pk %}">
+    Modifier
+</a>
+
+<a href="{% url 'core:project_delete' project.pk %}">
+    Supprimer
+</a>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "core/base.html" %}
+
+{% block content %}
+<h1>Liste des projets</h1>
+
+{% for project in projects %}
+    <h2>
+        <a href="{% url 'core:project_detail' project.pk %}">
+            {{ project.description }}
+        </a>
+    </h2>
+    <p>Organisation : {{ project.organization.name }}</p>
+{% empty %}
+    <p>Aucun projet disponible.</p>
+{% endfor %}
+{% endblock %}
