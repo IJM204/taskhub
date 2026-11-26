@@ -1,0 +1,20 @@
+{% extends "core/base.html" %}
+
+{% block title %}
+    {{ organization.name }} | TaskHub
+{% endblock %}
+
+{% block content %}
+
+<h2>{{ organization.name }}</h2>
+
+<p><strong>Slug :</strong> {{ organization.slug }}</p>
+
+<p>
+    <strong>Date de création :</strong>
+    {{ organization.created_at }}
+</p>
+
+<a href="/organizations/">Retour aux organisations</a>
+
+{% endblock %}
