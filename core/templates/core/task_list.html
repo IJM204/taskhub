@@ -6,6 +6,12 @@
 
 <h2>Liste des tâches</h2>
 
+<a href="{% url 'core:task_create' %}">
+    + Créer une nouvelle tâche
+</a>
+
+<hr>
+
 {% for task in tasks %}
     <div>
         <h3>{{ task.title|truncatechars:40 }}</h3>
@@ -29,10 +35,52 @@
         <p>
             Priorité : {{ task.priority }}
         </p>
+
+        <a href="{% url 'core:task_update' task.pk %}">
+            Modifier
+        </a>
+
+        |
+
+        <a href="{% url 'core:task_delete' task.pk %}">
+            Supprimer
+        </a>
     </div>
+
     <hr>
+
 {% empty %}
     <p>Aucune tâche enregistrée.</p>
 {% endfor %}
+
+
+{% if is_paginated %}
+    <div class="pagination">
+
+        {% if page_obj.has_previous %}
+            <a href="?page=1">Première</a>
+
+            <a href="?page={{ page_obj.previous_page_number }}">
+                Précédente
+            </a>
+        {% endif %}
+
+        <span>
+            Page {{ page_obj.number }}
+            sur {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">
+                Suivante
+            </a>
+
+            <a href="?page={{ page_obj.paginator.num_pages }}">
+                Dernière
+            </a>
+        {% endif %}
+
+    </div>
+{% endif %}
 
 {% endblock %}

@@ -1,11 +1,14 @@
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from django.views.generic import ListView, DetailView
+from django.views.generic.list import ListView
+from django.views.generic.detail import DetailView
+from django.urls import reverse_lazy
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
 
 from .models import Organization, Task, Project
 from .forms import ContactForm, ProjectForm
-
+from .forms import TaskForm
 
 def home(request):
     return HttpResponse("Bienvenue sur TaskHub !")
@@ -34,18 +37,17 @@ def organization_detail(request, slug):
     )
 
 
-def task_list(request):
-    tasks = Task.objects.select_related(
-        "project",
-        "project__organization"
-    ).all()
+class TaskListView(ListView):
+    model = Task
+    template_name = "core/task_list.html"
+    context_object_name = "tasks"
+    paginate_by = 5
 
-    return render(
-        request,
-        "core/task_list.html",
-        {"tasks": tasks}
-    )
-
+    def get_queryset(self):
+        return Task.objects.select_related(
+            "project",
+            "project__organization"
+        ).order_by("id")
 
 # EXERCICE 27 : FORMULAIRE DE CONTACT
 
@@ -172,3 +174,21 @@ class ProjectDetailView(DetailView):
     model = Project
     template_name = "core/project_detail.html"
     context_object_name = "project"
+class TaskCreateView(CreateView):
+    model = Task
+    form_class = TaskForm
+    template_name = "core/task_form.html"
+    success_url = reverse_lazy("core:task_list")
+
+
+class TaskUpdateView(UpdateView):
+    model = Task
+    form_class = TaskForm
+    template_name = "core/task_form.html"
+    success_url = reverse_lazy("core:task_list")
+
+
+class TaskDeleteView(DeleteView):
+    model = Task
+    template_name = "core/task_confirm_delete.html"
+    success_url = reverse_lazy("core:task_list")
