@@ -1,10 +1,14 @@
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
+
 from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
 from django.urls import reverse_lazy
+
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login
 
 from .models import Organization, Task, Project
 from .forms import ContactForm, ProjectForm
@@ -13,7 +17,23 @@ from .forms import TaskForm
 def home(request):
     return HttpResponse("Bienvenue sur TaskHub !")
 
+def signup(request):
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
 
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+
+            return redirect("core:home")
+    else:
+        form = UserCreationForm()
+
+    return render(
+        request,
+        "core/signup.html",
+        {"form": form}
+    )
 def organization_list(request):
     organizations = Organization.objects.all()
 
