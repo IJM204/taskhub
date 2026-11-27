@@ -14,3 +14,13 @@ __pycache__/
 
 # Fichiers VS Code
 .vscode/
+
+# Coverage
+.coverage
+htmlcov/
+
+# Ruff
+.ruff_cache/
+
+# Pre-commit
+.pre-commit-cache/

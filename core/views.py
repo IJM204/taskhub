@@ -9,13 +9,33 @@ from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
 
-from .models import Organization, Task, Project
+from .models import Organization, Task, Project, Membership
 from .forms import ContactForm, ProjectForm
 from .forms import TaskForm
+from django.core.exceptions import PermissionDenied
+
+
+def organization_admin_required(view_func):
+    def wrapper(request, *args, **kwargs):
+        organization_id = kwargs.get("organization_id")
+
+        if not Membership.objects.filter(
+            user=request.user,
+            organization_id=organization_id,
+            role=Membership.Role.ADMIN,
+        ).exists():
+            raise PermissionDenied
+
+        return view_func(request, *args, **kwargs)
+
+    return wrapper
+
 
 def home(request):
     return HttpResponse("Bienvenue sur TaskHub !")
+
 
 def signup(request):
     if request.method == "POST":
@@ -29,31 +49,28 @@ def signup(request):
     else:
         form = UserCreationForm()
 
-    return render(
-        request,
-        "core/signup.html",
-        {"form": form}
-    )
+    return render(request, "core/signup.html", {"form": form})
+
+
+@login_required
 def organization_list(request):
-    organizations = Organization.objects.all()
+    organizations = Organization.objects.filter(
+        memberships__user=request.user
+    ).distinct()
 
     return render(
-        request,
-        "core/organization_list.html",
-        {"organizations": organizations}
+        request, "core/organization_list.html", {"organizations": organizations}
     )
 
 
+@login_required
 def organization_detail(request, slug):
     organization = get_object_or_404(
-        Organization,
-        slug=slug
+        Organization, slug=slug, memberships__user=request.user
     )
 
     return render(
-        request,
-        "core/organization_detail.html",
-        {"organization": organization}
+        request, "core/organization_detail.html", {"organization": organization}
     )
 
 
@@ -65,137 +82,105 @@ class TaskListView(ListView):
 
     def get_queryset(self):
         queryset = Task.objects.select_related(
-            "project",
-            "project__organization"
+            "project", "project__organization"
         ).order_by("id")
 
         search = self.request.GET.get("search")
         status = self.request.GET.get("status")
 
         if search:
-            queryset = queryset.filter(
-                title__icontains=search
-            )
+            queryset = queryset.filter(title__icontains=search)
 
         if status:
-            queryset = queryset.filter(
-                status=status
-            )
+            queryset = queryset.filter(status=status)
 
         return queryset
+
+
 # EXERCICE 27 : FORMULAIRE DE CONTACT
+
 
 def contact(request):
     if request.method == "POST":
         form = ContactForm(request.POST)
 
         if form.is_valid():
-            return render(
-                request,
-                "core/contact_success.html"
-            )
+            return render(request, "core/contact_success.html")
     else:
         form = ContactForm()
 
-    return render(
-        request,
-        "core/contact.html",
-        {"form": form}
-    )
+    return render(request, "core/contact.html", {"form": form})
 
 
 # EXERCICE 28 : CREATION D'UN PROJET
+@login_required
+@organization_admin_required
+def project_create(request, organization_id):
+    organization = get_object_or_404(Organization, id=organization_id)
 
-def project_create(request):
     if request.method == "POST":
         form = ProjectForm(request.POST)
 
         if form.is_valid():
-            project = form.save()
+            project = form.save(commit=False)
+            project.organization = organization
+            project.save()
 
-            messages.success(
-                request,
-                "Projet créé avec succès."
-            )
+            messages.success(request, "Projet créé avec succès.")
 
-            return redirect(
-                "core:organization_detail",
-                slug=project.organization.slug
-            )
+            return redirect("core:organization_detail", slug=organization.slug)
     else:
         form = ProjectForm()
 
-    return render(
-        request,
-        "core/project_form.html",
-        {"form": form}
-    )
+    return render(request, "core/project_form.html", {"form": form})
 
 
-# EXERCICE 29 : MODIFICATION D'UN PROJET
-
+@login_required
 def project_update(request, pk):
     project = get_object_or_404(Project, pk=pk)
 
+    if not Membership.objects.filter(
+        user=request.user, organization=project.organization, role=Membership.Role.ADMIN
+    ).exists():
+        raise PermissionDenied
+
     if request.method == "POST":
-        form = ProjectForm(
-            request.POST,
-            instance=project
-        )
+        form = ProjectForm(request.POST, instance=project)
 
         if form.is_valid():
             project = form.save()
 
-            messages.success(
-                request,
-                "Projet modifié avec succès."
-            )
+            messages.success(request, "Projet modifié avec succès.")
 
-            return redirect(
-                "core:organization_detail",
-                slug=project.organization.slug
-            )
+            return redirect("core:organization_detail", slug=project.organization.slug)
     else:
         form = ProjectForm(instance=project)
 
-    return render(
-        request,
-        "core/project_form.html",
-        {
-            "form": form,
-            "project": project
-        }
-    )
+    return render(request, "core/project_form.html", {"form": form, "project": project})
 
 
-# EXERCICE 30 : SUPPRESSION D'UN PROJET
-
+@login_required
 def project_delete(request, pk):
     project = get_object_or_404(Project, pk=pk)
 
+    if not Membership.objects.filter(
+        user=request.user, organization=project.organization, role=Membership.Role.ADMIN
+    ).exists():
+        raise PermissionDenied
+
     if request.method == "POST":
         organization_slug = project.organization.slug
-
         project.delete()
 
-        messages.success(
-            request,
-            "Projet supprimé avec succès."
-        )
+        messages.success(request, "Projet supprimé avec succès.")
 
-        return redirect(
-            "core:organization_detail",
-            slug=organization_slug
-        )
+        return redirect("core:organization_detail", slug=organization_slug)
 
-    return render(
-        request,
-        "core/project_confirm_delete.html",
-        {"project": project}
-    )
+    return render(request, "core/project_confirm_delete.html", {"project": project})
 
 
 # EXERCICE 32 : LISTVIEW ET DETAILVIEW
+
 
 class ProjectListView(ListView):
     model = Project
@@ -208,6 +193,8 @@ class ProjectDetailView(DetailView):
     model = Project
     template_name = "core/project_detail.html"
     context_object_name = "project"
+
+
 class TaskCreateView(CreateView):
     model = Task
     form_class = TaskForm
