@@ -11,6 +11,8 @@ from datetime import timedelta
 from django.utils import timezone
 from core.forms import ContactForm, ProjectForm, TaskForm
 
+from rest_framework import status
+from rest_framework.test import APITestCase
 
 User = get_user_model()
 
@@ -174,3 +176,87 @@ class FormTest(TestCase):
         )
         self.assertFalse(form.is_valid())
         self.assertIn("due_date", form.errors)
+
+
+class TaskAPITest(APITestCase):
+    def setUp(self):
+        self.organization = Organization.objects.create(
+            name="Organisation API",
+            slug="organisation-api",
+        )
+
+        self.project = Project.objects.create(
+            organization=self.organization,
+            description="Projet API",
+        )
+
+        self.task = Task.objects.create(
+            title="Tâche de test API",
+            project=self.project,
+            due_date=timezone.localdate() + timedelta(days=5),
+        )
+
+        self.list_url = reverse("task-list")
+        self.detail_url = reverse(
+            "task-detail",
+            kwargs={"pk": self.task.pk},
+        )
+
+    def test_list_tasks(self):
+        response = self.client.get(self.list_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+    def test_create_task(self):
+        data = {
+            "title": "Nouvelle tâche API",
+            "project": self.project.pk,
+            "due_date": (timezone.localdate() + timedelta(days=10)).isoformat(),
+            "status": "TODO",
+            "priority": 3,
+        }
+
+        response = self.client.post(self.list_url, data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["title"], "Nouvelle tâche API")
+
+    def test_update_task(self):
+        data = {"title": "Tâche modifiée"}
+
+        response = self.client.patch(
+            self.detail_url,
+            data,
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["title"], "Tâche modifiée")
+
+    def test_delete_task(self):
+        response = self.client.delete(self.detail_url)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Task.objects.filter(pk=self.task.pk).exists())
+
+    def test_task_not_found(self):
+        url = reverse("task-detail", kwargs={"pk": 999999})
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_create_task_with_invalid_title(self):
+        data = {
+            "title": "AB",
+            "project": self.project.pk,
+            "due_date": (timezone.localdate() + timedelta(days=10)).isoformat(),
+            "status": "TODO",
+            "priority": 3,
+        }
+
+        response = self.client.post(self.list_url, data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("title", response.data)
