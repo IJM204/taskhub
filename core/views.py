@@ -44,11 +44,25 @@ class TaskListView(ListView):
     paginate_by = 5
 
     def get_queryset(self):
-        return Task.objects.select_related(
+        queryset = Task.objects.select_related(
             "project",
             "project__organization"
         ).order_by("id")
 
+        search = self.request.GET.get("search")
+        status = self.request.GET.get("status")
+
+        if search:
+            queryset = queryset.filter(
+                title__icontains=search
+            )
+
+        if status:
+            queryset = queryset.filter(
+                status=status
+            )
+
+        return queryset
 # EXERCICE 27 : FORMULAIRE DE CONTACT
 
 def contact(request):
