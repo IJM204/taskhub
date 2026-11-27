@@ -1,10 +1,11 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
-from . import views
+from . import views, api_views
 
 app_name = "core"
 
 urlpatterns = [
+    path("api/status/", api_views.api_status, name="api_status"),
     path("", views.home, name="home"),
     path("organizations/", views.organization_list, name="organization_list"),
     path(
@@ -38,4 +39,19 @@ urlpatterns = [
     ),
     path("projects/<int:pk>/edit/", views.project_update, name="project_update"),
     path("projects/<int:pk>/delete/", views.project_delete, name="project_delete"),
+    path(
+        "api/organizations/",
+        api_views.organization_api_list,
+        name="api_organization_list",
+    ),
+    path(
+        "api/tasks/",
+        api_views.TaskListCreateAPIView.as_view(),
+        name="api_task_list_create",
+    ),
+    path(
+        "api/tasks/<int:pk>/",
+        api_views.TaskDetailAPIView.as_view(),
+        name="api_task_detail",
+    ),
 ]
